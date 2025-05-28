@@ -67,8 +67,8 @@ cookiecutter gh:your-org/cookiecutter-python-project
 
 # 3. Set up the Conda env
 cd my_awesome_project
-conda env create -f environment.yml
-conda activate my_awesome_project
+./setup/setup_env.sh
+conda activate dev-env
 
 # 4. Dive in!
 pytest      # runs the placeholder test

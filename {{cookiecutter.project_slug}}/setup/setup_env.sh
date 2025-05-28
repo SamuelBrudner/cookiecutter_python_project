@@ -14,7 +14,9 @@ AUTHOR_EMAIL="{{ cookiecutter.author_email }}"
 # --- Constants ---
 VERSION="0.1.0"
 ENV_NAME="${PROJECT_SLUG}-dev"
-ENV_PATH="${PWD}/.venv"
+ENV_PATH_DEV="${PWD}/dev-env"
+ENV_PATH_PROD="${PWD}/prod-env"
+ENV_PATH="${ENV_PATH_DEV}"
 
 # --- Default values ---
 RUN_TESTS=true
@@ -428,15 +430,17 @@ ENV_FILE_TO_USE=""
 
 if [ -f "${ENV_FILE_DEV}" ]; then
     ENV_FILE_TO_USE="${ENV_FILE_DEV}"
+    ENV_PATH="${ENV_PATH_DEV}"
     echo -e "${YELLOW}Using development environment file: ${ENV_FILE_TO_USE##*/}${NC}"
 elif [ -f "${ENV_FILE_BASE}" ]; then
     ENV_FILE_TO_USE="${ENV_FILE_BASE}"
+    ENV_PATH="${ENV_PATH_PROD}"
     echo -e "${YELLOW}Using base environment file: ${ENV_FILE_TO_USE##*/}${NC}"
 else
     error "Neither development ('${ENV_FILE_DEV##*/}') nor base ('${ENV_FILE_BASE##*/}') environment file found in ${SCRIPT_DIR}"
 fi
 
-# Create or update environment in .venv directory
+# Create or update environment in the selected directory
 if [ ! -d "${ENV_PATH}" ]; then
     log "info" "Creating new conda environment at ${ENV_PATH}"
     section "Creating new environment from ${ENV_FILE_TO_USE##*/}"
@@ -638,7 +642,7 @@ echo -e "${YELLOW}To activate the environment, run:${NC}"
 echo -e "  conda activate \"${ENV_PATH}\""
 
 echo -e "\n${YELLOW}Or add this to your shell profile (e.g., .bashrc, .zshrc) for easier activation:${NC}"
-echo -e "  alias activate_project='conda activate \"${SCRIPT_DIR}/.venv\"'"
+echo -e "  alias activate_project='conda activate \"${ENV_PATH}\"'"
 
 echo -e "\n${YELLOW}To verify the installation, run:${NC}"
 echo -e "  pytest -v --cov=. --cov-report=term-missing"
