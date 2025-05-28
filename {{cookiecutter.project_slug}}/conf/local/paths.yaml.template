@@ -1,0 +1,30 @@
+# Paths configuration template
+# Copy this file to paths.yaml and update the paths as needed
+
+# Base directories
+project_root: ${oc.env:PROJECT_ROOT, "${hydra:runtime.cwd}"}
+
+# Data directories
+data:
+  raw: ${paths.project_root}/data/raw
+  processed: ${paths.project_root}/data/processed
+  external: ${paths.project_root}/data/external
+  interim: ${paths.project_root}/data/interim
+
+# Model directories
+models: ${paths.project_root}/models
+
+# Output directories
+outputs:
+  logs: ${paths.project_root}/logs
+  reports: ${paths.project_root}/reports
+  figures: ${paths.project_root}/figures
+
+# Local development overrides
+local: ~  # Override any paths here for local development
+
+# Example local override (uncomment and modify as needed):
+# local:
+#   data:
+#     raw: /path/to/local/raw/data
+#   models: /path/to/local/models

@@ -358,3 +358,7 @@ htmlcov/
 *.log
 *.sqlite
 *.db
+
+# Local configuration files (templates are in conf/local/*.template)
+conf/local/*.yaml
+!conf/local/*.template
