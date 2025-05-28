@@ -13,34 +13,6 @@ from .core import (
     config,
 )
 
-# Import API if included
-{% if cookiecutter.include_api == 'y' %}
-from .api import *  # noqa: F403
-{% endif %}
-
-# Define public API
-__all__ = [
-    'get_project_root',
-    'get_version',
-    'Config',
-    'config',
-]
-
-"""{{ cookiecutter.project_name }} - {{ cookiecutter.project_short_description }}
-
-This is the main package for {{ cookiecutter.project_name }}.
-"""
-
-__version__ = "{{ cookiecutter.version }}"
-
-# Import core functionality
-from .core import (
-    get_project_root,
-    get_version,
-    Config,
-    config,
-)
-
 # Import utilities
 from .utils import (
     SeedManager,
