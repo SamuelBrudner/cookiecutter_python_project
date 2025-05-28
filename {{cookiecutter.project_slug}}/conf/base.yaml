@@ -1,0 +1,44 @@
+# Base configuration for {{ cookiecutter.project_name }}
+# This file contains the default configuration that can be overridden by other configs
+
+# Core settings
+core:
+  debug: false
+  num_workers: ${oc.env:NUM_WORKERS, 4}
+  cache_dir: ${paths.data}/cache
+  results_dir: ${paths.results}
+
+# Data processing settings
+data:
+  raw_dir: ${paths.data}/raw
+  processed_dir: ${paths.data}/processed
+  test_size: 0.2
+  random_state: ${seed}
+  batch_size: 32
+
+# Model settings (example)
+model:
+  name: "baseline"
+  params:
+    learning_rate: 1.0e-3
+    hidden_size: 128
+    dropout: 0.1
+    num_layers: 2
+
+# Training settings (example)
+training:
+  max_epochs: 100
+  early_stopping_patience: 10
+  checkpoint_dir: ${paths.results}/checkpoints
+  log_dir: ${paths.logs}/tensorboard
+  
+# Evaluation settings
+evaluation:
+  metrics: ["accuracy", "precision", "recall", "f1"]
+  output_dir: ${paths.results}/evaluation
+  
+# Logging settings
+logging:
+  level: INFO
+  format: "[%(asctime)s][%(name)s][%(levelname)s] %(message)s"
+  file: ${paths.logs}/${now:%Y-%m-%d}.log

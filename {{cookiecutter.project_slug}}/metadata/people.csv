@@ -1,0 +1,2 @@
+id,name,email,affiliation,orcid,role,github,notes
+1,{{ cookiecutter.author_name }},{{ cookiecutter.author_email }},{{ cookiecutter.affiliation }},,Maintainer,,Project lead

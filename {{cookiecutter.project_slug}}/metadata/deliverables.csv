@@ -1,0 +1,2 @@
+id,project_id,title,description,due_date,status,priority,owner_id,notes
+1,1,Initial Release,First stable release of the package,,Planned,High,1,Initial package with core functionality

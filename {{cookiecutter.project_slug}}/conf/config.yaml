@@ -1,0 +1,34 @@
+# Main configuration file for {{ cookiecutter.project_name }}
+# This file contains the default configuration
+
+defaults:
+  - base
+  - _self_
+
+# Project metadata
+project:
+  name: ${oc.env:PROJECT_NAME, "{{ cookiecutter.project_slug }}"}
+  version: ${oc.env:PROJECT_VERSION, "0.1.0"}
+  description: "{{ cookiecutter.project_short_description }}"
+
+# Path configurations
+paths:
+  data: ${oc.env:DATA_DIR, "data/"}
+  results: ${oc.env:RESULTS_DIR, "results/"}
+  logs: ${oc.env:LOGS_DIR, "logs/"}
+
+# Logging configuration
+logging:
+  level: ${oc.env:LOG_LEVEL, "INFO"}
+  format: "[%(asctime)s][%(name)s][%(levelname)s] %(message)s"
+  file: ${paths.logs}/${now:%Y-%m-%d}.log
+
+# Random seed for reproducibility
+seed: ${oc.env:SEED, 42}
+
+# Add your application-specific configuration below
+# Example:
+# model:
+#   name: "resnet50"
+#   learning_rate: 0.001
+#   batch_size: 32

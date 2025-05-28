@@ -1,0 +1,127 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["{{ cookiecutter.project_slug }}*"]
+namespaces = false
+
+[project]
+name = "{{ cookiecutter.project_slug }}"
+version = "{{ cookiecutter.version }}"
+description = "{{ cookiecutter.project_short_description }}"
+authors = [
+    {name = "{{ cookiecutter.author_name }}", email = "{{ cookiecutter.author_email }}"},
+]
+readme = "README.md"
+requires-python = ">={{ cookiecutter.python_version }}"
+license = {text = "{{ cookiecutter.open_source_license }}"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "pydantic>=2.0.0",
+    "typing-extensions>=4.0.0",
+    "python-dotenv>=1.0.0",
+    {% if cookiecutter.include_api == 'y' %}
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    "python-multipart>=0.0.6",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "email-validator>=2.0.0",
+    {% endif %}
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.0.0",
+    "pytest-xdist>=3.0.0",
+    "hypothesis>=6.0.0",
+    
+    # Code quality
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+    "ruff>=0.0.280",
+    "flake8>=6.0.0",
+    "flake8-bugbear>=23.0.0",
+    "flake8-comprehensions>=3.0.0",
+    "pre-commit>=3.0.0",
+    
+    # Documentation
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=1.0.0",
+    "myst-parser>=1.0.0",
+    "sphinx-copybutton>=0.5.0",
+    "sphinx-autodoc-typehints>=1.0.0",
+    
+    # Development
+    "ipykernel>=6.0.0",
+    "ipython>=8.0.0",
+    "jupyter>=1.0.0",
+    "jupyterlab>=4.0.0",
+    "jupyterlab-code-formatter>=2.0.0",
+    "jupyter-packaging>=0.12.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/yourusername/{{ cookiecutter.project_slug }}"
+"Bug Tracker" = "https://github.com/yourusername/{{ cookiecutter.project_slug }}/issues"
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "-v --cov={{ cookiecutter.project_slug }} --cov-report=term-missing"
+
+[coverage.run]
+source = ["{{ cookiecutter.project_slug }}"]
+omit = ["*/tests/*"]
+
+[coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+]
+
+[tool.ruff.isort]
+known-first-party = ["{{ cookiecutter.project_slug }}"]
+
+[project.scripts]
+{{ cookiecutter.project_slug }} = "{{ cookiecutter.project_slug }}.cli:main"
