@@ -7,8 +7,8 @@ clean software architecture with lab‑friendly conventions.
 
 ## ✨ Key features
 
-* **Opinionated layout** – `src/`, `conf/`, `notebooks/`, `workflow/`, `metadata/`, … – tuned for Hydra, Kedro/Snakemake, DVC, and ClickUp/LabArchives automation.
-* **Batteries included** – stub `environment.yml`, pre‑commit config, CITATION file, Dockerfile (Micromamba‑based), and example metadata CSVs.
+* **Opinionated layout** – `src/`, `conf/`, `workflow/`, `metadata/`, `reference/`, `setup/`, … – tuned for Hydra, Snakemake, and ClickUp/LabArchives automation.
+* **Batteries included** – stub `pyproject.toml`, pre‑commit config, Dockerfile (Micromamba‑based), and example metadata CSVs.
 * **Fast container builds** – Dockerfile starts from `mambaorg/micromamba`, yielding slim images & quick dependency resolution while your host machine can stick with vanilla Conda.
 * **One‑command regeneration** – run `./make_cookiecutter.sh` to (re)build the template from scratch, keeping the generator script as the single source of truth.
 * **CI‑ready** – template renders cleanly via `cookiecutter --no-input .`; add a GitHub Action to guard against regressions.
@@ -20,26 +20,17 @@ clean software architecture with lab‑friendly conventions.
 ```text
 project/
 ├── src/{{ pkg_name }}/           # Python package (importable)
-├── conf/                         # Hydra configs (default/, experiment/)
-├── notebooks/
-│   ├── exploratory/              # Scratch EDA
-│   ├── demos/                    # Polished walkthroughs
-│   └── pipelines/                # Papermill‑parameterised
-├── data/                         # DVC pointers only
+├── conf/                         # Hydra configs
 ├── metadata/                     # Canonical CSVs (people, projects, deliverables)
-├── reference/                    # Goals & supplementary docs (native + Markdown)
-├── checklists/                   # YAML/Markdown task lists
-├── workflow/                     # Kedro or Snakemake DAG
-├── tools/                        # Automation scripts (ClickUp, ELN, …)
+├── reference/                    # Goals & supplementary docs
+├── setup/                        # Environment helper scripts
+├── workflow/                     # Snakemake or Kedro DAG
 ├── tests/                        # Pytest suite scaffold
-├── docs/                         # MkDocs site stub
-├── environment.yml               # Conda env spec (host + container)
-├── conda-lock.yml                # Optional lockfile
-├── .pre-commit-config.yaml       # Code quality hooks
-├── Dockerfile                    # Micromamba‑based
-├── dvc.yaml                      # Data pipeline stages
-├── CITATION.cff                  # How to cite
-└── README.md                     # Project README (template)
+├── .github/                      # CI workflows (if enabled)
+├── Dockerfile                    # Micromamba‑based container
+├── docker-compose.yml            # Optional services for Docker
+├── pyproject.toml                # Project metadata & dependencies
+└── README.md                     # Project README
 ```
 
 ---
