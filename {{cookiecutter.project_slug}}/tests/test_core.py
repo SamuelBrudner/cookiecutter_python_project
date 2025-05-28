@@ -1,13 +1,26 @@
 """Tests for core module functionality."""
 
-import pytest
+import importlib.util
+import types
+import sys
 from pathlib import Path
-from {{ cookiecutter.project_slug }}.core import (
-    get_project_root,
-    get_version,
-    Config,
-    config as global_config
-)
+
+# Dynamically import the core module to avoid template placeholders causing
+# syntax errors before project generation.
+MODULE_ROOT = "{{cookiecutter.project_slug}}"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+core_path = Path(__file__).resolve().parents[1] / "src" / MODULE_ROOT / "core" / "__init__.py"
+source = core_path.read_text()
+source = source.replace("from {{ cookiecutter.project_slug }} import __version__", "__version__ = '0.0.0'")
+core = types.ModuleType("core")
+core.__file__ = str(core_path)
+exec(compile(source, str(core_path), "exec"), core.__dict__)
+
+get_project_root = core.get_project_root
+get_version = core.get_version
+Config = core.Config
+global_config = core.config
 
 
 def test_get_project_root():
