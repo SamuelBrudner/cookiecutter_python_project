@@ -65,3 +65,4 @@ Thumbs.db
 
 # Project specific
 {{cookiecutter.project_slug}}/  # Ignore generated projects in the template
+.vscode/
