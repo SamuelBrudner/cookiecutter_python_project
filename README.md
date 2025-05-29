@@ -67,7 +67,7 @@ cookiecutter gh:your-org/cookiecutter-python-project
 
 # 3. Set up the Conda env
 cd my_awesome_project
-./setup/setup_env.sh
+./setup/setup_env.sh --dev
 conda activate dev-env
 
 # 4. Dive in!

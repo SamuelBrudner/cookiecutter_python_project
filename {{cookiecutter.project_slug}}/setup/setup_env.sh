@@ -26,6 +26,7 @@ SKIP_CONDA=false
 SKIP_PRE_COMMIT=false
 SKIP_TESTS=false
 SKIP_LOCK=false
+DEV_MODE=false
 
 # --- Command line arguments ---
 # Parse command line arguments
@@ -47,6 +48,10 @@ while [[ $# -gt 0 ]]; do
             SKIP_LOCK=true
             shift
             ;;
+        --dev)
+            DEV_MODE=true
+            shift
+            ;;
         --force)
             FORCE=true
             shift
@@ -64,6 +69,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --skip-conda         Skip conda environment setup"
             echo "  --skip-pre-commit    Skip pre-commit installation"
             echo "  --skip-lock          Skip conda-lock generation"
+            echo "  --dev                Use development environment"
             echo "  --force              Force operations that would normally prompt"
             echo "  -v, --verbose        Show more detailed output"
             echo "  -h, --help           Show this help message"
@@ -75,7 +81,8 @@ while [[ $# -gt 0 ]]; do
             echo "Unknown parameter: $1"
             exit 1
             ;;
-    escapedone
+    esac
+done
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -355,7 +362,7 @@ generate_conda_lock() {
     if [ "${SKIP_LOCK}" = true ]; then
         log "info" "Skipping conda-lock generation as requested"
         return 0
-    }
+    fi
     
     section "Generating conda-lock file"
     
@@ -428,7 +435,11 @@ ENV_FILE_DEV="${SCRIPT_DIR}/environment-dev.yml"
 ENV_FILE_BASE="${SCRIPT_DIR}/environment.yml"
 ENV_FILE_TO_USE=""
 
-if [ -f "${ENV_FILE_DEV}" ]; then
+if [ "$DEV_MODE" = true ]; then
+    ENV_FILE_TO_USE="${ENV_FILE_DEV}"
+    ENV_PATH="${ENV_PATH_DEV}"
+    echo -e "${YELLOW}Using development environment file: ${ENV_FILE_TO_USE##*/}${NC}"
+elif [ -f "${ENV_FILE_DEV}" ]; then
     ENV_FILE_TO_USE="${ENV_FILE_DEV}"
     ENV_PATH="${ENV_PATH_DEV}"
     echo -e "${YELLOW}Using development environment file: ${ENV_FILE_TO_USE##*/}${NC}"
