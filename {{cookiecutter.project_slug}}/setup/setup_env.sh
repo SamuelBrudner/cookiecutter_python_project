@@ -117,6 +117,19 @@ fi
 # shellcheck source=setup_utils.sh
 source "$UTILS_SCRIPT"
 
+# Source function modules
+MODULES_DIR="${BASH_SOURCE[0]%/*}/modules"
+for module in setup_conda create_environment install_packages setup_pre_commit generate_conda_lock; do
+    module_file="${MODULES_DIR}/${module}.sh"
+    if [ -f "$module_file" ]; then
+        # shellcheck source=/dev/null
+        source "$module_file"
+    else
+        echo -e "\033[1;31m✗ Error: Missing module $module_file\033[0m" >&2
+        exit 1
+    fi
+done
+
 # Enhanced logging
 log() {
     local level=$1
@@ -187,217 +200,9 @@ fi
 
 section "Setting up ${PROJECT_NAME} environment in ${ENV_PATH}"
 
+
 # --- Conda Setup ---
-setup_conda() {
-    if [ "${SKIP_CONDA}" = true ]; then
-        log "info" "Skipping conda setup as requested"
-        return 0
-    fi
-
-    # Check if conda is available
-    if ! command -v conda &> /dev/null; then
-        log "warning" "Conda not found in PATH"
-        
-        # If we're in a container, try to install miniconda
-        if [ -f /.dockerenv ] || grep -q docker /proc/1/cgroup 2>/dev/null; then
-            install_conda_in_container
-        else
-            error "conda is not installed or not in PATH.\nPlease install Miniconda/Anaconda first: https://docs.conda.io/en/latest/miniconda.html"
-        fi
-    fi
-
-    # Initialize conda for this shell
-    log "info" "Initializing conda..."
-    __conda_setup="$($(command -v conda) 'shell.bash' 'hook' 2> /dev/null)"
-    if [ $? -eq 0 ]; then
-        eval "$__conda_setup"
-        log "debug" "Conda shell integration initialized"
-    else
-        if [ -f "${CONDA_PREFIX:-/dev/null}/etc/profile.d/conda.sh" ]; then
-            . "${CONDA_PREFIX}/etc/profile.d/conda.sh"
-            log "debug" "Sourced conda.sh from ${CONDA_PREFIX}/etc/profile.d/"
-        else
-            export PATH="$(conda info --base)/bin:$PATH"
-            log "warning" "Could not find conda.sh, added conda to PATH"
-        fi
-    fi
-    unset __conda_setup
-
-    # Verify conda is working
-    if ! command -v conda &> /dev/null; then
-        error "Failed to initialize conda. Please check your installation."
-    fi
-
-    log "success" "Conda initialized: $(conda --version 2>/dev/null || echo 'unknown version')"
-}
-
-# Install conda in a container environment
-install_conda_in_container() {
-    section "Installing Miniconda in container..."
-    
-    # Install wget if not available
-    if ! command -v wget &> /dev/null; then
-        log "info" "Installing wget..."
-        if command -v apt-get &> /dev/null; then
-            run_command_verbose apt-get update
-            run_command_verbose apt-get install -y wget
-        elif command -v yum &> /dev/null; then
-            run_command_verbose yum install -y wget
-        elif command -v apk &> /dev/null; then
-            run_command_verbose apk add --no-cache wget
-        else
-            error "Could not install wget: package manager not found"
-        fi
-    fi
-    
-    # Download and install Miniconda
-    local miniconda_installer="/tmp/miniconda.sh"
-    local conda_prefix="/opt/conda"
-    
-    log "info" "Downloading Miniconda installer..."
-    run_command_verbose wget -q "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-$(uname -m).sh" -O "$miniconda_installer"
-    
-    log "info" "Installing Miniconda to ${conda_prefix}..."
-    run_command_verbose bash "$miniconda_installer" -b -p "$conda_prefix"
-    run_command_verbose rm -f "$miniconda_installer"
-    
-    # Add conda to PATH
-    export PATH="${conda_prefix}/bin:$PATH"
-    
-    # Verify installation
-    if ! command -v conda &> /dev/null; then
-        error "Failed to find conda after installation. PATH: $PATH"
-    fi
-    
-    log "success" "Miniconda installed successfully: $(conda --version 2>/dev/null || echo 'unknown version')"
-}
-
-# --- Environment Management ---
-create_environment() {
-    if [ "${SKIP_CONDA}" = true ]; then
-        log "info" "Skipping environment creation as requested"
-        return 0
-    fi
-
-    # Check if environment already exists
-    if [ -d "${ENV_PATH}" ]; then
-        if [ "${FORCE}" = true ]; then
-            log "warning" "Removing existing environment at ${ENV_PATH} (--force)"
-            rm -rf "${ENV_PATH}"
-        else
-            log "info" "Using existing environment at ${ENV_PATH}"
-            return 0
-        fi
-    fi
-
-    # Create conda environment
-    section "Creating conda environment"
-    log "info" "Creating environment with Python ${PYTHON_VERSION}"
-    
-    run_command_verbose conda create -y -p "${ENV_PATH}" python="${PYTHON_VERSION}" || \
-        error "Failed to create conda environment"
-    
-    # Initialize the new environment
-    log "info" "Initializing new environment..."
-    CONDA_BASE=$(conda info --base)
-    source "${CONDA_BASE}/etc/profile.d/conda.sh"
-    conda activate "${ENV_PATH}" || error "Failed to activate new environment"
-    
-    log "success" "Environment created at ${ENV_PATH}"
-}
-
-# --- Package Installation ---
-install_packages() {
-    section "Installing packages"
-    
-    # Ensure we're in the right environment
-    local env_path=$(conda info --envs | grep -E "^${ENV_PATH}\s" | awk '{print $1}')
-    if [ -z "${env_path}" ]; then
-        error "Target environment not found. Please create it first."
-    fi
-    
-    # Activate the environment
-    CONDA_BASE=$(conda info --base)
-    source "${CONDA_BASE}/etc/profile.d/conda.sh"
-    conda activate "${ENV_PATH}" || error "Failed to activate environment"
-    
-    # Install development dependencies
-    log "info" "Installing development dependencies..."
-    
-    # First install pip, setuptools, and wheel
-    run_command_verbose conda install -y -c conda-forge pip setuptools wheel
-    
-    # Install the package in development mode with all extras
-    log "info" "Installing package in development mode..."
-    run_command_verbose pip install -e ".[dev]" || \
-        error "Failed to install package in development mode"
-    
-    log "success" "Package installed in development mode"
-}
-
-# --- Pre-commit Setup ---
-setup_pre_commit() {
-    if [ "${SKIP_PRE_COMMIT}" = true ]; then
-        log "info" "Skipping pre-commit setup as requested"
-        return 0
-    fi
-    
-    section "Setting up pre-commit hooks"
-    
-    # Check if pre-commit is installed
-    if ! command -v pre-commit &> /dev/null; then
-        log "info" "Installing pre-commit..."
-        run_command_verbose conda install -y -c conda-forge pre-commit
-    fi
-    
-    # Install pre-commit hooks
-    log "info" "Installing pre-commit hooks..."
-    run_command_verbose pre-commit install --install-hooks || \
-        log "warning" "Failed to install some pre-commit hooks"
-    
-    log "success" "pre-commit hooks installed"
-}
-
-# --- Conda Lock Generation ---
-generate_conda_lock() {
-    if [ "${SKIP_LOCK}" = true ]; then
-        log "info" "Skipping conda-lock generation as requested"
-        return 0
-    fi
-    
-    section "Generating conda-lock file"
-    
-    # Check if conda-lock is installed
-    if ! command -v conda-lock &> /dev/null; then
-        log "info" "Installing conda-lock..."
-        run_command_verbose conda install -y -c conda-forge conda-lock
-    fi
-    
-    # Determine platform
-    local platform=""
-    case "$(uname -s)" in
-        Darwin*)
-            if [ "$(uname -m)" = "arm64" ]; then
-                platform="osx-arm64"
-            else
-                platform="osx-64"
-            fi
-            ;;
-        Linux*)
-            platform="linux-64"
-            ;;
-        *)
-            log "warning" "Unsupported platform for conda-lock: $(uname -s)"
-            return 1
-            ;;
-    esac
-    
-    log "info" "Generating lock file for platform: ${platform}"
-    run_command_verbose conda-lock -f environment.yml -p "${platform}" --lockfile conda-lock.yml || \
-        log "warning" "Failed to generate conda-lock file"
-    
-    log "success" "conda-lock file generated"
-}
+# Functions are sourced from modules in the modules/ directory
 
 # --- Main Execution ---
 
