@@ -36,8 +36,9 @@ def test_dev_flag_selects_dev_env(tmp_path: Path) -> None:
     os.chmod(setup_dir / "setup_env.sh", 0o755)
     os.chmod(setup_dir / "setup_utils.sh", 0o755)
 
-    # Provide only base environment file
+    # Provide environment files expected by the script
     (setup_dir / "environment.yml").write_text("name: base\n")
+    (setup_dir / "environment-dev.yml").write_text("name: dev\n")
 
     # Create stub commands to satisfy script dependencies
     bin_dir = tmp_path / "bin"
@@ -63,5 +64,6 @@ def test_dev_flag_selects_dev_env(tmp_path: Path) -> None:
     ], cwd=setup_dir, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
     print(result.stdout)
+    assert result.returncode == 0
     assert "Using development environment file" in result.stdout
 
