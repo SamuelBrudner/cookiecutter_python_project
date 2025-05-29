@@ -98,6 +98,22 @@ def _create_stub_modules() -> None:
         sys.modules["jax"] = jax
         sys.modules["jax.numpy"] = types.ModuleType("jax.numpy")
 
+    if "sqlalchemy" not in sys.modules:
+        sqlalchemy = types.ModuleType("sqlalchemy")
+        sqlalchemy.create_engine = lambda *args, **kwargs: None
+
+        sqlalchemy_ext = types.ModuleType("sqlalchemy.ext")
+        sqlalchemy_declarative = types.ModuleType("sqlalchemy.ext.declarative")
+        sqlalchemy_declarative.declarative_base = lambda *args, **kwargs: type("Base", (), {})
+
+        sqlalchemy_orm = types.ModuleType("sqlalchemy.orm")
+        sqlalchemy_orm.sessionmaker = lambda *args, **kwargs: lambda *a, **kw: None
+
+        sys.modules["sqlalchemy"] = sqlalchemy
+        sys.modules["sqlalchemy.ext"] = sqlalchemy_ext
+        sys.modules["sqlalchemy.ext.declarative"] = sqlalchemy_declarative
+        sys.modules["sqlalchemy.orm"] = sqlalchemy_orm
+
 
 @pytest.fixture(scope="session", autouse=True)
 def stub_dependencies() -> None:
@@ -116,6 +132,7 @@ def load_module_from_path(name: str, path: Path):
     spec = importlib.util.spec_from_loader(name, loader=None)
     module = importlib.util.module_from_spec(spec)
     module.__file__ = str(path)
+    module.__package__ = name.rpartition('.')[0]
     exec(compile(source, str(path), "exec"), module.__dict__)
     sys.modules[name] = module
     return module
