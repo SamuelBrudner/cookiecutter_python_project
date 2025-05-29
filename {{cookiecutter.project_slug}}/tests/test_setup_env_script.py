@@ -143,3 +143,35 @@ def test_source_with_run_setup(tmp_path: Path) -> None:
     assert result.returncode == 0
     assert "Environment setup completed" in result.stdout
 
+
+def test_activation_instructions(tmp_path: Path) -> None:
+    """Script should print instructions for conda run usage."""
+    setup_dir = _prepare_scripts(tmp_path)
+    _prepare_environment_files(setup_dir)
+
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    _create_stubs(bin_dir)
+
+    etc_dir = Path("/tmp/etc/profile.d")
+    etc_dir.mkdir(parents=True, exist_ok=True)
+    (etc_dir / "conda.sh").write_text("")
+
+    env = os.environ.copy()
+    env["PATH"] = f"{bin_dir}:{env['PATH']}"
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
+
+    script = setup_dir / "setup_env.sh"
+    result = subprocess.run(
+        [str(script), "--verbose", "--force"],
+        cwd=setup_dir,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+
+    print(result.stdout)
+    assert result.returncode == 0
+    assert "conda run -p" in result.stdout
+

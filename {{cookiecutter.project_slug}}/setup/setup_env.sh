@@ -477,11 +477,14 @@ echo -e "\n${GREEN}Activation Instructions:${NC}"
 echo -e "${YELLOW}To activate the environment, run:${NC}"
 echo -e "  conda activate \"${ENV_PATH}\""
 
+echo -e "\n${YELLOW}For scripts and non-interactive usage (recommended for batch jobs/CI):${NC}"
+echo -e "  conda run -p \"${ENV_PATH}\" your_script.py"
+
+echo -e "\n${YELLOW}To run tests:${NC}"
+echo -e "  conda run -p \"${ENV_PATH}\" pytest tests/"
+
 echo -e "\n${YELLOW}Or add this to your shell profile (e.g., .bashrc, .zshrc) for easier activation:${NC}"
 echo -e "  alias activate_project='conda activate \"${ENV_PATH}\"'"
-
-echo -e "\n${YELLOW}To verify the installation, run:${NC}"
-echo -e "  pytest -v --cov=. --cov-report=term-missing"
 
 echo -e "\n${GREEN}Happy coding! 🚀${NC}"
 safe_exit 0
