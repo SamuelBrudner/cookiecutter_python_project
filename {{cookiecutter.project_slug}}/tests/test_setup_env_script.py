@@ -30,6 +30,9 @@ def test_dev_flag_selects_dev_env(tmp_path: Path) -> None:
     project_root = Path(__file__).resolve().parents[2] / "{{cookiecutter.project_slug}}"
     shutil.copy(project_root / "setup" / "setup_env.sh", setup_dir)
     shutil.copy(project_root / "setup" / "setup_utils.sh", setup_dir)
+    modules_src = project_root / "setup" / "modules"
+    modules_dst = setup_dir / "modules"
+    shutil.copytree(modules_src, modules_dst)
     os.chmod(setup_dir / "setup_env.sh", 0o755)
     os.chmod(setup_dir / "setup_utils.sh", 0o755)
 
