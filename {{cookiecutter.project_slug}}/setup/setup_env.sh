@@ -34,6 +34,7 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --no-tests)
             SKIP_TESTS=true
+            RUN_TESTS=false
             shift
             ;;
         --skip-conda)
@@ -81,27 +82,6 @@ while [[ $# -gt 0 ]]; do
             echo "Unknown parameter: $1"
             exit 1
             ;;
-    esac
-done
-
-# Parse command line arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --no-tests)
-            RUN_TESTS=false
-            shift
-            ;;
-        -h|--help)
-            echo "Usage: $0 [--no-tests]"
-            echo "  --no-tests     Skip running the test suite after setup"
-            echo "  -h, --help     Show this help message"
-            exit 0
-            ;;
-        *)
-            echo "Unknown parameter: $1"
-            exit 1
-            ;;
-
     esac
 done
 
