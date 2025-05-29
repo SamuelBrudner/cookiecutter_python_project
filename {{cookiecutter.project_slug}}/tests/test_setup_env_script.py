@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
+import pytest
 
 
 def make_stub(name: str, directory: Path) -> None:
@@ -174,4 +175,42 @@ def test_activation_instructions(tmp_path: Path) -> None:
     print(result.stdout)
     assert result.returncode == 0
     assert "conda run -p" in result.stdout
+
+
+def test_idempotent_existing_env(tmp_path: Path) -> None:
+    """Existing environments should be updated without interactive prompts."""
+    setup_dir = _prepare_scripts(tmp_path)
+    _prepare_environment_files(setup_dir)
+
+    # Simulate an existing environment directory
+    env_dir = setup_dir / "dev-env"
+    env_dir.mkdir()
+
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    _create_stubs(bin_dir)
+
+    etc_dir = Path("/tmp/etc/profile.d")
+    etc_dir.mkdir(parents=True, exist_ok=True)
+    (etc_dir / "conda.sh").write_text("")
+
+    env = os.environ.copy()
+    env["PATH"] = f"{bin_dir}:{env['PATH']}"
+    env["STUB_ENV_PATH"] = str(env_dir)
+    env.pop("CI", None)
+
+    script = setup_dir / "setup_env.sh"
+    result = subprocess.run(
+        [str(script), "--dev", "--verbose"],
+        cwd=setup_dir,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=5,
+    )
+
+    print(result.stdout)
+    assert result.returncode == 0
+    assert "Updating existing conda environment" in result.stdout
 

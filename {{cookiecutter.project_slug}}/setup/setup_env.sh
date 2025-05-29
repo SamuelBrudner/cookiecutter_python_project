@@ -202,18 +202,11 @@ done
 
 # Setup environment directory
 if [ -d "${ENV_PATH}" ] && [ "${FORCE}" = false ]; then
-    log "warning" "Environment already exists at ${ENV_PATH}"
-    if [ -z "${CI:-}" ]; then  # Skip prompt in CI
-        read -rp "Do you want to remove it and start fresh? [y/N] " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            log "info" "Removing existing environment..."
-            rm -rf "${ENV_PATH}"
-        else
-            log "info" "Using existing environment"
-        fi
-    else
-        log "info" "Running in CI, using existing environment"
+    log "info" "Using existing environment at ${ENV_PATH}"
+else
+    if [ -d "${ENV_PATH}" ] && [ "${FORCE}" = true ]; then
+        log "warning" "Removing existing environment at ${ENV_PATH} (--force)"
+        rm -rf "${ENV_PATH}"
     fi
 fi
 
