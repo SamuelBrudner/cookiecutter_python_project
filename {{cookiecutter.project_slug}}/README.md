@@ -30,6 +30,7 @@ If you're unsure, it's safe to skip the API initially. You can always add it lat
 
 - **Modern Python**: Uses Python {{ cookiecutter.python_version }} with type hints and async/await
 - **FastAPI API**: {% if cookiecutter.include_api == 'y' %}Included{% else %}Not included{% endif %} - A modern, fast (high-performance), web framework for building APIs
+- **SQLAlchemy**: Provides a powerful ORM layer for database interactions
 - **Testing**: Pytest with plugins for better testing
 - **Code Quality**: Pre-commit hooks with Black, isort, flake8, and mypy
 - **Containerization**: {% if cookiecutter.use_docker == 'y' %}Dockerfile included{% else %}No Docker support{% endif %}
