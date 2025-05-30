@@ -172,6 +172,23 @@ log() {
     esac
 }
 
+# Source optional path definitions
+setup_paths() {
+    local paths_file="${SCRIPT_DIR}/paths.sh"
+    if [ -f "$paths_file" ]; then
+        # shellcheck source=/dev/null
+        source "$paths_file"
+    fi
+}
+
+# Generate Makefile path includes if supported
+generate_makefile_paths() {
+    local mk_script="${SCRIPT_DIR}/../scripts/generate_makefile_paths.sh"
+    if [ -x "$mk_script" ]; then
+        "$mk_script"
+    fi
+}
+
 # --- Main Script ---
 
 if [ "$SOURCED" -eq 1 ] && [ "$RUN_SETUP" -ne 1 ]; then
@@ -185,6 +202,12 @@ log "debug" "Environment path: ${ENV_PATH}"
 
 # Get the directory of this script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Source additional path configuration if available
+setup_paths
+
+# Generate Makefile path include if script exists
+generate_makefile_paths
 
 # Check for required commands
 check_command() {
