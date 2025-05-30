@@ -71,6 +71,10 @@ cd my_awesome_project
 ./setup/setup_env.sh --dev --use-lock    # use lock file if available
 conda activate ./dev-env
 
+# For a production environment
+./setup/setup_env.sh --prod --clean-install
+conda activate ./prod-env
+
 # 4. Dive in!
 pytest      # runs the placeholder test
 dvc status  # data pipeline scaffold

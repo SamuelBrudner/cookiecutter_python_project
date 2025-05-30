@@ -9,6 +9,8 @@ SCRIPT = Path(__file__).parents[1] / "setup" / "setup_env.sh"
     "--skip-conda",
     "--skip-pre-commit",
     "--skip-lock",
+    "--prod",
+    "--production",
     "--clean-install",
     "--force",
     "-v",
