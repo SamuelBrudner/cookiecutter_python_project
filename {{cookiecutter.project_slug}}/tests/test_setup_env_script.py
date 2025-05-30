@@ -374,3 +374,78 @@ def test_clean_install_removes_old_env(tmp_path: Path) -> None:
     assert not list(env_dir.glob(".nfs*"))
 
 
+def test_skip_checks_allows_active_env(tmp_path: Path) -> None:
+    """--skip-checks should bypass active environment validation."""
+    setup_dir = _prepare_scripts(tmp_path)
+    _prepare_environment_files(setup_dir)
+
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    _create_stubs(bin_dir)
+
+    etc_dir = Path("/tmp/etc/profile.d")
+    etc_dir.mkdir(parents=True, exist_ok=True)
+    (etc_dir / "conda.sh").write_text("")
+
+    env = os.environ.copy()
+    env["PATH"] = f"{bin_dir}:{env['PATH']}"
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
+    env["CONDA_PREFIX"] = str(setup_dir / "dev-env")
+
+    script = setup_dir / "setup_env.sh"
+    result = subprocess.run(
+        [str(script), "--dev", "--verbose", "--skip-checks"],
+        cwd=setup_dir,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+
+    print(result.stdout)
+    assert result.returncode == 0
+
+
+def test_skip_checks_allows_missing_command(tmp_path: Path) -> None:
+    """Required command check should be skipped when flag is used."""
+    setup_dir = _prepare_scripts(tmp_path)
+    _prepare_environment_files(setup_dir)
+
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    for cmd in ["conda", "pip", "pre-commit", "conda-lock", "pytest"]:
+        make_stub(cmd, bin_dir)
+
+    etc_dir = Path("/tmp/etc/profile.d")
+    etc_dir.mkdir(parents=True, exist_ok=True)
+    (etc_dir / "conda.sh").write_text("")
+
+    env = os.environ.copy()
+    env["PATH"] = f"{bin_dir}:/usr/bin:/bin"
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
+
+    script = setup_dir / "setup_env.sh"
+
+    result_fail = subprocess.run(
+        [str(script), "--dev", "--verbose", "--skip-pre-commit", "--skip-lock", "--no-tests"],
+        cwd=setup_dir,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    assert result_fail.returncode != 0
+
+    result = subprocess.run(
+        [str(script), "--dev", "--verbose", "--skip-pre-commit", "--skip-lock", "--no-tests", "--skip-checks"],
+        cwd=setup_dir,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+
+    print(result.stdout)
+    assert result.returncode == 0
+
+
