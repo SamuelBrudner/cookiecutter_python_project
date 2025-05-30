@@ -16,6 +16,18 @@ def make_stub(name: str, directory: Path) -> None:
             "elif [ \"$1\" = 'info' ] && [ \"$2\" = '--envs' ]; then\n"
             "  echo \"$STUB_ENV_PATH *\"\n"
             "  exit 0\n"
+            "elif [ \"$1\" = 'create' ] || { [ \"$1\" = 'env' ] && [ \"$2\" = 'create' ]; } || { [ \"$1\" = 'env' ] && [ \"$2\" = 'update' ]; }; then\n"
+            "  next=0\n"
+            "  for arg in \"$@\"; do\n"
+            "    if [ \"$next\" = 1 ]; then\n"
+            "      mkdir -p \"$arg\"\n"
+            "      break\n"
+            "    fi\n"
+            "    case $arg in\n"
+            "      -p|--prefix) next=1 ;;\n"
+            "    esac\n"
+            "  done\n"
+            "  exit 0\n"
             "fi\n"
             "exit 0\n"
         )
@@ -264,6 +276,21 @@ def test_generate_makefile_paths_called(tmp_path: Path) -> None:
         "#!/bin/sh\n" "echo called > \"$(dirname \"$0\")/makefile.paths\"\n"
     )
     os.chmod(gen_script, 0o755)
+def test_abort_when_env_active(tmp_path: Path) -> None:
+    """Script should error if the target environment is already active."""
+    setup_dir = _prepare_scripts(tmp_path)
+    _prepare_environment_files(setup_dir)
+
+
+def test_clean_install_removes_old_env(tmp_path: Path) -> None:
+    """--clean-install should recreate env and remove .nfs files."""
+    setup_dir = _prepare_scripts(tmp_path)
+    _prepare_environment_files(setup_dir)
+
+    env_dir = setup_dir / "dev-env"
+    env_dir.mkdir()
+    (env_dir / "sentinel").write_text("old")
+    (env_dir / ".nfs123").write_text("temp")
 
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
@@ -280,6 +307,12 @@ def test_generate_makefile_paths_called(tmp_path: Path) -> None:
     script = setup_dir / "setup_env.sh"
     result = subprocess.run(
         [str(script), "--verbose", "--force"],
+    env["CONDA_PREFIX"] = str(setup_dir / "dev-env")
+
+    script = setup_dir / "setup_env.sh"
+    result = subprocess.run(
+        [str(script), "--dev", "--verbose"],
+
         cwd=setup_dir,
         env=env,
         stdout=subprocess.PIPE,
@@ -290,4 +323,7 @@ def test_generate_makefile_paths_called(tmp_path: Path) -> None:
     print(result.stdout)
     assert result.returncode == 0
     assert (scripts_dir / "makefile.paths").exists()
+    assert result.returncode != 0
+    assert "active" in result.stdout.lower()
+
 

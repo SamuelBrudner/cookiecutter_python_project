@@ -6,10 +6,10 @@ generate_conda_lock() {
 
     section "Generating conda-lock file"
 
-    # Check if conda-lock is installed
-    if ! command -v conda-lock &> /dev/null; then
-        log "info" "Installing conda-lock..."
-        run_command_verbose conda install -y -c conda-forge conda-lock
+    # Ensure conda-lock is available
+    if ! ensure_conda_lock; then
+        log "warning" "conda-lock unavailable; skipping lock generation"
+        return 0
     fi
 
     # Determine platform

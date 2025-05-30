@@ -54,6 +54,7 @@ SKIP_PRE_COMMIT=false
 SKIP_TESTS=false
 SKIP_LOCK=false
 DEV_MODE=false
+CLEAN_INSTALL=false
 
 # --- Command line arguments ---
 # Parse command line arguments
@@ -88,6 +89,10 @@ while [[ $# -gt 0 ]]; do
             FORCE=true
             shift
             ;;
+        --clean-install)
+            CLEAN_INSTALL=true
+            shift
+            ;;
         -v|--verbose)
             VERBOSE=true
             shift
@@ -103,6 +108,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --skip-lock          Skip conda-lock generation"
             echo "  --dev                Use development environment"
             echo "  --force              Force operations that would normally prompt"
+            echo "  --clean-install      Remove existing env before creation"
             echo "  --run-setup          Force running setup when sourced"
             echo "  -v, --verbose        Show more detailed output"
             echo "  -h, --help           Show this help message"
@@ -133,7 +139,7 @@ source "$UTILS_SCRIPT"
 
 # Source function modules
 MODULES_DIR="${BASH_SOURCE[0]%/*}/modules"
-for module in setup_conda create_environment install_packages setup_pre_commit generate_conda_lock; do
+for module in setup_conda create_environment install_packages setup_pre_commit ensure_conda_lock generate_conda_lock; do
     module_file="${MODULES_DIR}/${module}.sh"
     if [ -f "$module_file" ]; then
         # shellcheck source=/dev/null
@@ -186,6 +192,10 @@ generate_makefile_paths() {
     local mk_script="${SCRIPT_DIR}/../scripts/generate_makefile_paths.sh"
     if [ -x "$mk_script" ]; then
         "$mk_script"
+# Abort if the target environment is currently active
+check_not_in_active_env() {
+    if [ -n "${CONDA_PREFIX:-}" ] && [ "$(realpath "${CONDA_PREFIX}")" = "$(realpath "${ENV_PATH}")" ]; then
+        log "error" "The environment at ${ENV_PATH} is currently active. Please deactivate it before running this setup."
     fi
 }
 
@@ -199,6 +209,8 @@ fi
 log "info" "Starting ${PROJECT_NAME} environment setup"
 log "debug" "Python version: ${PYTHON_VERSION}"
 log "debug" "Environment path: ${ENV_PATH}"
+
+check_not_in_active_env
 
 # Get the directory of this script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -6,7 +6,11 @@ create_environment() {
 
     # Check if environment already exists
     if [ -d "${ENV_PATH}" ]; then
-        if [ "${FORCE}" = true ]; then
+        if [ "${CLEAN_INSTALL}" = true ]; then
+            log "warning" "Removing existing environment at ${ENV_PATH} (--clean-install)"
+            rm -rf "${ENV_PATH}"
+            cleanup_nfs_temp_files "${ENV_PATH}"
+        elif [ "${FORCE}" = true ]; then
             log "warning" "Removing existing environment at ${ENV_PATH} (--force)"
             rm -rf "${ENV_PATH}"
         else
