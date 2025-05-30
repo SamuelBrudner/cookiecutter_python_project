@@ -54,6 +54,7 @@ SKIP_PRE_COMMIT=false
 SKIP_TESTS=false
 SKIP_LOCK=false
 DEV_MODE=false
+CLEAN_INSTALL=false
 
 # --- Command line arguments ---
 # Parse command line arguments
@@ -88,6 +89,10 @@ while [[ $# -gt 0 ]]; do
             FORCE=true
             shift
             ;;
+        --clean-install)
+            CLEAN_INSTALL=true
+            shift
+            ;;
         -v|--verbose)
             VERBOSE=true
             shift
@@ -103,6 +108,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --skip-lock          Skip conda-lock generation"
             echo "  --dev                Use development environment"
             echo "  --force              Force operations that would normally prompt"
+            echo "  --clean-install      Remove existing env before creation"
             echo "  --run-setup          Force running setup when sourced"
             echo "  -v, --verbose        Show more detailed output"
             echo "  -h, --help           Show this help message"

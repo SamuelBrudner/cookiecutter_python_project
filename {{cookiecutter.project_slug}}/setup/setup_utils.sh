@@ -51,6 +51,15 @@ run_command_verbose() {
     fi
 }
 
+# Remove stale .nfs files that can prevent directory removal
+cleanup_nfs_temp_files() {
+    local target="$1"
+    if [ -d "$target" ]; then
+        find "$target" -name '.nfs*' -type f -delete 2>/dev/null || true
+        rmdir "$target" 2>/dev/null || true
+    fi
+}
+
 # This makes the script safe to source and prevents it from executing
 # commands if it's run directly, other than defining functions/variables.
 return 0 2>/dev/null || exit 0
