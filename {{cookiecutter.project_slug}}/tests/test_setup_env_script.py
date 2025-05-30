@@ -187,6 +187,8 @@ def test_activation_instructions(tmp_path: Path) -> None:
     print(result.stdout)
     assert result.returncode == 0
     assert "conda run -p" in result.stdout
+    expected_alias = "alias activate_{{ cookiecutter.project_slug }}-dev"
+    assert expected_alias in result.stdout
 
 
 def test_idempotent_existing_env(tmp_path: Path) -> None:

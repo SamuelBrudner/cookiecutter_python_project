@@ -70,6 +70,7 @@ cd my_awesome_project
 ./setup/setup_env.sh --dev --clean-install
 ./setup/setup_env.sh --dev --use-lock    # use lock file if available
 conda activate ./dev-env
+alias activate_my_awesome_project-dev='conda activate my_awesome_project-dev'
 
 # 4. Dive in!
 pytest      # runs the placeholder test
