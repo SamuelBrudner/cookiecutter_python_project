@@ -41,6 +41,7 @@ AUTHOR_EMAIL="{{ cookiecutter.author_email }}"
 # --- Constants ---
 VERSION="0.1.0"
 ENV_NAME="${PROJECT_SLUG}-dev"
+ENV_NAME_PROD="${PROJECT_SLUG}"
 ENV_PATH_DEV="${PWD}/dev-env"
 ENV_PATH_PROD="${PWD}/prod-env"
 ENV_PATH="${ENV_PATH_DEV}"
@@ -310,14 +311,17 @@ ENV_FILE_TO_USE=""
 if [ "$DEV_MODE" = true ]; then
     ENV_FILE_TO_USE="${ENV_FILE_DEV}"
     ENV_PATH="${ENV_PATH_DEV}"
+    ENV_NAME="${PROJECT_SLUG}-dev"
     echo -e "${YELLOW}Using development environment file: ${ENV_FILE_TO_USE##*/}${NC}"
 elif [ -f "${ENV_FILE_DEV}" ]; then
     ENV_FILE_TO_USE="${ENV_FILE_DEV}"
     ENV_PATH="${ENV_PATH_DEV}"
+    ENV_NAME="${PROJECT_SLUG}-dev"
     echo -e "${YELLOW}Using development environment file: ${ENV_FILE_TO_USE##*/}${NC}"
 elif [ -f "${ENV_FILE_BASE}" ]; then
     ENV_FILE_TO_USE="${ENV_FILE_BASE}"
     ENV_PATH="${ENV_PATH_PROD}"
+    ENV_NAME="${PROJECT_SLUG}"
     echo -e "${YELLOW}Using base environment file: ${ENV_FILE_TO_USE##*/}${NC}"
 else
     error "Neither development ('${ENV_FILE_DEV##*/}') nor base ('${ENV_FILE_BASE##*/}') environment file found in ${SCRIPT_DIR}"
@@ -560,6 +564,7 @@ echo -e "  conda run -p \"${ENV_PATH}\" pytest tests/"
 
 echo -e "\n${YELLOW}Or add this to your shell profile (e.g., .bashrc, .zshrc) for easier activation:${NC}"
 echo -e "  alias activate_project='conda activate \"${ENV_PATH}\"'"
+echo -e "  alias activate_${ENV_NAME}='conda activate ${ENV_NAME}'"
 
 echo -e "\n${GREEN}Happy coding! 🚀${NC}"
 safe_exit 0
