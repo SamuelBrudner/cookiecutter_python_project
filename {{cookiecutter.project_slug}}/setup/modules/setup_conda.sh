@@ -44,8 +44,19 @@ setup_conda() {
             . "${CONDA_PREFIX}/etc/profile.d/conda.sh"
             log "debug" "Sourced conda.sh from ${CONDA_PREFIX}/etc/profile.d/"
         else
-            export PATH="$(conda info --base)/bin:$PATH"
-            log "warning" "Could not find conda.sh, added conda to PATH"
+            local found=""
+            for prefix in "${HOME}/miniconda3" "/usr/local/miniconda" "/opt/conda"; do
+                if [ -f "${prefix}/etc/profile.d/conda.sh" ]; then
+                    . "${prefix}/etc/profile.d/conda.sh"
+                    log "debug" "Sourced conda.sh from ${prefix}/etc/profile.d/"
+                    found=1
+                    break
+                fi
+            done
+            if [ -z "$found" ]; then
+                export PATH="$(conda info --base)/bin:$PATH"
+                log "warning" "Could not find conda.sh, added conda to PATH"
+            fi
         fi
     fi
     unset __conda_setup
