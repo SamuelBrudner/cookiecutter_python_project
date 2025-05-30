@@ -56,6 +56,7 @@ SKIP_LOCK=false
 DEV_MODE=false
 CLEAN_INSTALL=false
 SKIP_CHECKS=false
+USE_LOCK=false
 
 # --- Command line arguments ---
 # Parse command line arguments
@@ -80,6 +81,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --skip-checks)
             SKIP_CHECKS=true
+            shift
+            ;;
+        --use-lock)
+            USE_LOCK=true
             shift
             ;;
         --run-setup)
@@ -112,6 +117,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --skip-pre-commit    Skip pre-commit installation"
             echo "  --skip-lock          Skip conda-lock generation"
             echo "  --skip-checks       Skip environment checks"
+            echo "  --use-lock           Use conda-lock.yml if available"
             echo "  --dev                Use development environment"
             echo "  --force              Force operations that would normally prompt"
             echo "  --clean-install      Remove existing env before creation"
@@ -318,10 +324,26 @@ else
 fi
 
 # Create or update environment in the selected directory
-if [ ! -d "${ENV_PATH}" ]; then
-    log "info" "Creating new conda environment at ${ENV_PATH}"
-    section "Creating new environment from ${ENV_FILE_TO_USE##*/}"
-    run_command_verbose conda env create -f "${ENV_FILE_TO_USE}" --prefix "${ENV_PATH}"
+LOCK_FILE="${SCRIPT_DIR}/conda-lock.yml"
+USE_LOCK_FILE=false
+if [ "$USE_LOCK" = true ]; then
+    if [ -f "$LOCK_FILE" ]; then
+        USE_LOCK_FILE=true
+        echo -e "${YELLOW}Using lock file: ${LOCK_FILE##*/}${NC}"
+    else
+        log "warning" "Requested --use-lock but ${LOCK_FILE##*/} not found. Falling back to ${ENV_FILE_TO_USE##*/}."
+    fi
+fi
+
+if [ "$USE_LOCK_FILE" = true ]; then
+    if [ ! -d "${ENV_PATH}" ]; then
+        log "info" "Creating new conda environment at ${ENV_PATH}"
+        section "Creating new environment from ${LOCK_FILE##*/}"
+    else
+        log "info" "Updating existing conda environment at ${ENV_PATH}"
+        section "Updating existing environment from ${LOCK_FILE##*/}"
+    fi
+    run_command_verbose conda create --prefix "${ENV_PATH}" --file "$LOCK_FILE"
     if [ $? -eq 0 ]; then
         log "success" "Successfully created conda environment"
     else
@@ -329,14 +351,26 @@ if [ ! -d "${ENV_PATH}" ]; then
         exit 1
     fi
 else
-    log "info" "Updating existing conda environment at ${ENV_PATH}"
-    section "Updating existing environment from ${ENV_FILE_TO_USE##*/}"
-    run_command_verbose conda env update -f "${ENV_FILE_TO_USE}" --prefix "${ENV_PATH}" --prune
-    if [ $? -eq 0 ]; then
-        log "success" "Successfully updated conda environment"
+    if [ ! -d "${ENV_PATH}" ]; then
+        log "info" "Creating new conda environment at ${ENV_PATH}"
+        section "Creating new environment from ${ENV_FILE_TO_USE##*/}"
+        run_command_verbose conda env create -f "${ENV_FILE_TO_USE}" --prefix "${ENV_PATH}"
+        if [ $? -eq 0 ]; then
+            log "success" "Successfully created conda environment"
+        else
+            log "error" "Failed to create conda environment"
+            exit 1
+        fi
     else
-        log "error" "Failed to update conda environment"
-        exit 1
+        log "info" "Updating existing conda environment at ${ENV_PATH}"
+        section "Updating existing environment from ${ENV_FILE_TO_USE##*/}"
+        run_command_verbose conda env update -f "${ENV_FILE_TO_USE}" --prefix "${ENV_PATH}" --prune
+        if [ $? -eq 0 ]; then
+            log "success" "Successfully updated conda environment"
+        else
+            log "error" "Failed to update conda environment"
+            exit 1
+        fi
     fi
 fi
 
