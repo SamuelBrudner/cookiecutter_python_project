@@ -72,6 +72,10 @@ cd my_awesome_project
 conda activate ./dev-env
 alias activate_my_awesome_project-dev='conda activate my_awesome_project-dev'
 
+# For a production environment
+./setup/setup_env.sh --prod --clean-install
+conda activate ./prod-env
+
 # 4. Dive in!
 pytest      # runs the placeholder test
 dvc status  # data pipeline scaffold

@@ -93,6 +93,36 @@ def test_dev_flag_selects_dev_env(tmp_path: Path) -> None:
     assert "Using development environment file" in result.stdout
 
 
+def test_prod_flag_selects_base_env(tmp_path: Path) -> None:
+    setup_dir = _prepare_scripts(tmp_path)
+    _prepare_environment_files(setup_dir)
+
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    _create_stubs(bin_dir)
+    make_stub("python", bin_dir)
+
+    etc_dir = Path("/tmp/etc/profile.d")
+    etc_dir.mkdir(parents=True, exist_ok=True)
+    (etc_dir / "conda.sh").write_text("")
+
+    env = os.environ.copy()
+    env["PATH"] = f"{bin_dir}:{env['PATH']}"
+    env["STUB_ENV_PATH"] = str(setup_dir / "prod-env")
+
+    script = setup_dir / "setup_env.sh"
+    result = subprocess.run([
+        str(script),
+        "--prod",
+        "--verbose",
+        "--force",
+    ], cwd=setup_dir, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+    print(result.stdout)
+    assert result.returncode == 0
+    assert "Using base environment file" in result.stdout
+
+
 def test_source_without_run_setup(tmp_path: Path) -> None:
     """Sourcing the script should not run the setup by default."""
     setup_dir = _prepare_scripts(tmp_path)

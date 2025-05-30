@@ -55,6 +55,7 @@ SKIP_PRE_COMMIT=false
 SKIP_TESTS=false
 SKIP_LOCK=false
 DEV_MODE=false
+PROD_MODE=false
 CLEAN_INSTALL=false
 SKIP_CHECKS=false
 USE_LOCK=false
@@ -96,6 +97,10 @@ while [[ $# -gt 0 ]]; do
             DEV_MODE=true
             shift
             ;;
+        --prod|--production)
+            PROD_MODE=true
+            shift
+            ;;
         --force)
             FORCE=true
             shift
@@ -120,6 +125,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --skip-checks       Skip environment checks"
             echo "  --use-lock           Use conda-lock.yml if available"
             echo "  --dev                Use development environment"
+            echo "  --prod, --production Use production environment"
             echo "  --force              Force operations that would normally prompt"
             echo "  --clean-install      Remove existing env before creation"
             echo "  --run-setup          Force running setup when sourced"
@@ -135,6 +141,12 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+if [ "$PROD_MODE" = true ]; then
+    ENV_PATH="${ENV_PATH_PROD}"
+elif [ "$DEV_MODE" = true ]; then
+    ENV_PATH="${ENV_PATH_DEV}"
+fi
 
 # Exit on error, unset variables, and pipe failures when executing
 if [ "$SOURCED" -eq 0 ] || [ "$RUN_SETUP" -eq 1 ]; then
@@ -308,7 +320,11 @@ ENV_FILE_DEV="${SCRIPT_DIR}/environment-dev.yml"
 ENV_FILE_BASE="${SCRIPT_DIR}/environment.yml"
 ENV_FILE_TO_USE=""
 
-if [ "$DEV_MODE" = true ]; then
+if [ "$PROD_MODE" = true ]; then
+    ENV_FILE_TO_USE="${ENV_FILE_BASE}"
+    ENV_PATH="${ENV_PATH_PROD}"
+    echo -e "${YELLOW}Using base environment file: ${ENV_FILE_TO_USE##*/}${NC}"
+elif [ "$DEV_MODE" = true ]; then
     ENV_FILE_TO_USE="${ENV_FILE_DEV}"
     ENV_PATH="${ENV_PATH_DEV}"
     ENV_NAME="${PROJECT_SLUG}-dev"
