@@ -55,6 +55,7 @@ SKIP_TESTS=false
 SKIP_LOCK=false
 DEV_MODE=false
 CLEAN_INSTALL=false
+SKIP_CHECKS=false
 USE_LOCK=false
 
 # --- Command line arguments ---
@@ -76,6 +77,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --skip-lock)
             SKIP_LOCK=true
+            shift
+            ;;
+        --skip-checks)
+            SKIP_CHECKS=true
             shift
             ;;
         --use-lock)
@@ -111,6 +116,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --skip-conda         Skip conda environment setup"
             echo "  --skip-pre-commit    Skip pre-commit installation"
             echo "  --skip-lock          Skip conda-lock generation"
+            echo "  --skip-checks       Skip environment checks"
             echo "  --use-lock           Use conda-lock.yml if available"
             echo "  --dev                Use development environment"
             echo "  --force              Force operations that would normally prompt"
@@ -198,6 +204,9 @@ generate_makefile_paths() {
     local mk_script="${SCRIPT_DIR}/../scripts/generate_makefile_paths.sh"
     if [ -x "$mk_script" ]; then
         "$mk_script"
+    fi
+}
+
 # Abort if the target environment is currently active
 check_not_in_active_env() {
     if [ -n "${CONDA_PREFIX:-}" ] && [ "$(realpath "${CONDA_PREFIX}")" = "$(realpath "${ENV_PATH}")" ]; then
@@ -216,7 +225,9 @@ log "info" "Starting ${PROJECT_NAME} environment setup"
 log "debug" "Python version: ${PYTHON_VERSION}"
 log "debug" "Environment path: ${ENV_PATH}"
 
-check_not_in_active_env
+if [ "$SKIP_CHECKS" = false ]; then
+    check_not_in_active_env
+fi
 
 # Get the directory of this script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -227,17 +238,19 @@ setup_paths
 # Generate Makefile path include if script exists
 generate_makefile_paths
 
-# Check for required commands
-check_command() {
-    if ! command -v "$1" >/dev/null 2>&1; then
-        log "error" "Required command not found: $1"
-    fi
-}
+if [ "$SKIP_CHECKS" = false ]; then
+    # Check for required commands
+    check_command() {
+        if ! command -v "$1" >/dev/null 2>&1; then
+            log "error" "Required command not found: $1"
+        fi
+    }
 
-# Verify required commands are available
-for cmd in conda python pip; do
-    check_command "$cmd"
-done
+    # Verify required commands are available
+    for cmd in conda python pip; do
+        check_command "$cmd"
+    done
+fi
 
 # --- Main Script Logic ---
 
