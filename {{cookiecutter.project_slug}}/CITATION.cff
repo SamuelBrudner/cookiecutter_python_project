@@ -1,0 +1,7 @@
+cff-version: 1.2.0
+title: "{{ cookiecutter.project_name }}"
+version: "{{ cookiecutter.version }}"
+authors:
+  - name: "{{ cookiecutter.author_name }}"
+    email: "{{ cookiecutter.author_email }}"
+message: "If you use this work, please cite it."
