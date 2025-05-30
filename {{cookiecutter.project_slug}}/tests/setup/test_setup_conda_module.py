@@ -25,6 +25,19 @@ def _create_stub_module(bin_dir: Path, log_file: Path) -> None:
     script.chmod(0o755)
 
 
+def _create_stub_module_no_avail(bin_dir: Path, log_file: Path) -> None:
+    script = bin_dir / "module"
+    script.write_text(
+        f"#!/bin/sh\n"
+        f"echo \"$@\" >> '{log_file}'\n"
+        "if [ \"$1\" = 'avail' ]; then\n"
+        "  : # no modules available\n"
+        "  exit 0\n"
+        "fi\n"
+    )
+    script.chmod(0o755)
+
+
 def _create_stub_conda(bin_dir: Path, log_file: Path) -> None:
     script = bin_dir / "conda"
     script.write_text(
@@ -81,3 +94,36 @@ EOS
     print(result.stdout)
     assert result.returncode == 0
     assert "load miniconda" in log_file.read_text()
+
+
+def test_try_load_conda_module_fails_when_no_modules(tmp_path: Path) -> None:
+    log_file = tmp_path / "calls.log"
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+
+    _create_stub_module_no_avail(bin_dir, log_file)
+
+    setup_dir = _prepare_setup_files(tmp_path)
+
+    env = os.environ.copy()
+    env["PATH"] = f"{bin_dir}:{env['PATH']}"
+
+    status_file = tmp_path / "status.txt"
+
+    script = f"""
+        source '{setup_dir}/setup_utils.sh'
+        source '{setup_dir}/setup_conda.sh'
+        log() {{ echo "$@" >> '{log_file}'; }}
+        try_load_conda_module
+        echo $? > '{status_file}'
+    """
+
+    result = subprocess.run([
+        "bash",
+        "-c",
+        script,
+    ], env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    print(result.stdout)
+    assert result.returncode == 0
+    assert status_file.read_text().strip() != "0"
+    assert "load" not in log_file.read_text()
