@@ -2,6 +2,8 @@
 
 {{ cookiecutter.project_short_description }}
 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/yourusername/{{ cookiecutter.project_slug }}/HEAD?filepath=notebooks/config.ipynb)
+
 ## 🤔 When to Include the API?
 
 When generating your project, you'll be asked whether to include API functionality. Here's guidance to help you decide:
