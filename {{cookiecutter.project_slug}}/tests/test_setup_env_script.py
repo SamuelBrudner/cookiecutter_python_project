@@ -374,3 +374,32 @@ def test_clean_install_removes_old_env(tmp_path: Path) -> None:
     assert not list(env_dir.glob(".nfs*"))
 
 
+
+
+def test_use_lock_creates_from_lock(tmp_path: Path) -> None:
+    setup_dir = _prepare_scripts(tmp_path)
+    _prepare_environment_files(setup_dir)
+    (setup_dir / "conda-lock.yml").write_text("lock: true\n")
+
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    _create_stubs(bin_dir)
+
+    etc_dir = Path("/tmp/etc/profile.d")
+    etc_dir.mkdir(parents=True, exist_ok=True)
+    (etc_dir / "conda.sh").write_text("")
+
+    env = os.environ.copy()
+    env["PATH"] = f"{bin_dir}:{env['PATH']}"
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
+
+    script = setup_dir / "setup_env.sh"
+    result = subprocess.run([
+        str(script), "--dev", "--use-lock", "--verbose", "--force"
+    ], cwd=setup_dir, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+    print(result.stdout)
+    assert result.returncode == 0
+    assert "conda-lock.yml" in result.stdout
+    assert "conda create" in result.stdout
+
