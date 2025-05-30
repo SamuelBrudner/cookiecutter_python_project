@@ -1,3 +1,15 @@
+try_load_conda_module() {
+    if command -v module >/dev/null 2>&1; then
+        for mod in miniconda anaconda; do
+            if module avail "$mod" 2>&1 | grep -q "$mod"; then
+                log "info" "Loading $mod module"
+                module load "$mod" && return 0
+            fi
+        done
+    fi
+    return 1
+}
+
 setup_conda() {
     if [ "${SKIP_CONDA}" = true ]; then
         log "info" "Skipping conda setup as requested"
@@ -8,11 +20,16 @@ setup_conda() {
     if ! command -v conda &> /dev/null; then
         log "warning" "Conda not found in PATH"
 
-        # If we're in a container, try to install miniconda
-        if [ -f /.dockerenv ] || grep -q docker /proc/1/cgroup 2>/dev/null; then
-            install_conda_in_container
-        else
-            error "conda is not installed or not in PATH.\nPlease install Miniconda/Anaconda first: https://docs.conda.io/en/latest/miniconda.html"
+        # Try loading a conda module if available
+        try_load_conda_module || true
+
+        if ! command -v conda &> /dev/null; then
+            # If we're in a container, try to install miniconda
+            if [ -f /.dockerenv ] || grep -q docker /proc/1/cgroup 2>/dev/null; then
+                install_conda_in_container
+            else
+                error "conda is not installed or not in PATH.\nPlease install Miniconda/Anaconda first: https://docs.conda.io/en/latest/miniconda.html"
+            fi
         fi
     fi
 
