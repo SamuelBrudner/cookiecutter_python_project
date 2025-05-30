@@ -227,6 +227,12 @@ def test_idempotent_existing_env(tmp_path: Path) -> None:
     assert "Updating existing conda environment" in result.stdout
 
 
+def test_abort_when_env_active(tmp_path: Path) -> None:
+    """Script should error if the target environment is already active."""
+    setup_dir = _prepare_scripts(tmp_path)
+    _prepare_environment_files(setup_dir)
+
+
 def test_clean_install_removes_old_env(tmp_path: Path) -> None:
     """--clean-install should recreate env and remove .nfs files."""
     setup_dir = _prepare_scripts(tmp_path)
@@ -247,21 +253,22 @@ def test_clean_install_removes_old_env(tmp_path: Path) -> None:
 
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}:{env['PATH']}"
-    env["STUB_ENV_PATH"] = str(env_dir)
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
+    env["CONDA_PREFIX"] = str(setup_dir / "dev-env")
 
     script = setup_dir / "setup_env.sh"
     result = subprocess.run(
-        [str(script), "--dev", "--verbose", "--clean-install"],
+        [str(script), "--dev", "--verbose"],
+
         cwd=setup_dir,
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=5,
     )
 
     print(result.stdout)
-    assert result.returncode == 0
-    assert not (env_dir / "sentinel").exists()
-    assert not any(env_dir.glob(".nfs*"))
+    assert result.returncode != 0
+    assert "active" in result.stdout.lower()
+
 

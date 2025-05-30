@@ -178,6 +178,13 @@ log() {
     esac
 }
 
+# Abort if the target environment is currently active
+check_not_in_active_env() {
+    if [ -n "${CONDA_PREFIX:-}" ] && [ "$(realpath "${CONDA_PREFIX}")" = "$(realpath "${ENV_PATH}")" ]; then
+        log "error" "The environment at ${ENV_PATH} is currently active. Please deactivate it before running this setup."
+    fi
+}
+
 # --- Main Script ---
 
 if [ "$SOURCED" -eq 1 ] && [ "$RUN_SETUP" -ne 1 ]; then
@@ -188,6 +195,8 @@ fi
 log "info" "Starting ${PROJECT_NAME} environment setup"
 log "debug" "Python version: ${PYTHON_VERSION}"
 log "debug" "Environment path: ${ENV_PATH}"
+
+check_not_in_active_env
 
 # Get the directory of this script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
