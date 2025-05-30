@@ -67,13 +67,15 @@ cookiecutter gh:your-org/cookiecutter-python-project
 
 # 3. Set up the Conda env
 cd my_awesome_project
-./setup/setup_env.sh --dev
+./setup/setup_env.sh --dev --clean-install
 conda activate ./dev-env
 
 # 4. Dive in!
 pytest      # runs the placeholder test
 dvc status  # data pipeline scaffold
 ```
+
+The `--clean-install` flag removes any existing environment before creating a new one. The setup script also tries to load system modules named `miniconda` or `anaconda` before falling back to installing Miniconda in a container.
 
 ---
 
