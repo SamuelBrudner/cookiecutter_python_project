@@ -133,7 +133,7 @@ source "$UTILS_SCRIPT"
 
 # Source function modules
 MODULES_DIR="${BASH_SOURCE[0]%/*}/modules"
-for module in setup_conda create_environment install_packages setup_pre_commit generate_conda_lock; do
+for module in setup_conda create_environment install_packages setup_pre_commit ensure_conda_lock generate_conda_lock; do
     module_file="${MODULES_DIR}/${module}.sh"
     if [ -f "$module_file" ]; then
         # shellcheck source=/dev/null
