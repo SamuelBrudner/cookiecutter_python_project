@@ -286,6 +286,7 @@ section "Setting up ${PROJECT_NAME} environment in ${ENV_PATH}"
 
 # Run setup steps
 setup_conda
+
 generate_conda_lock
 
 # --- Post-Setup Information ---
