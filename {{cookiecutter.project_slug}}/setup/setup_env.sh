@@ -164,7 +164,7 @@ source "$UTILS_SCRIPT"
 
 # Source function modules
 MODULES_DIR="${BASH_SOURCE[0]%/*}/modules"
-for module in setup_conda setup_pre_commit ensure_conda_lock generate_conda_lock; do
+for module in setup_conda ensure_conda_lock generate_conda_lock; do
     module_file="${MODULES_DIR}/${module}.sh"
     if [ -f "$module_file" ]; then
         # shellcheck source=/dev/null
@@ -286,8 +286,6 @@ section "Setting up ${PROJECT_NAME} environment in ${ENV_PATH}"
 
 # Run setup steps
 setup_conda
-setup_pre_commit
-generate_conda_lock
 
 # --- Post-Setup Information ---
 section "${PROJECT_NAME} Setup Complete!"
@@ -423,88 +421,7 @@ else
     log "warning" "Failed to install some pre-commit hooks (this might be expected in some environments)"
 fi
 
-section "Managing conda-lock.yml for reproducibility"
-log "info" "Checking for conda-lock..."
-if ! command -v conda-lock &> /dev/null; then
-    log "warning" "conda-lock not found in PATH. Attempting to install..."
-    if conda install -n base -y -c conda-forge conda-lock; then
-        log "success" "Successfully installed conda-lock via conda"
-    else
-        log "warning" "Failed to install conda-lock via conda. Trying pip..."
-        if pip install conda-lock; then
-            log "success" "Successfully installed conda-lock via pip"
-        else
-            log "warning" "Failed to install conda-lock via pip. Skipping lock file generation."
-        fi
-    fi
-    
-    if ! command -v conda-lock &> /dev/null; then
-        log "warning" "conda-lock still not available after installation attempts. Skipping lock file generation."
-    fi
-else
-    log "info" "Found conda-lock: $(conda-lock --version 2>/dev/null || echo 'version unknown')"
-fi
-
-if command -v conda-lock &> /dev/null; then
-    log "info" "Determining platform for conda-lock..."
-    PLATFORM=""
-    case "$(uname -s)" in
-        Darwin*)
-            if [ "$(uname -m)" = "arm64" ]; then 
-                PLATFORM="osx-arm64"
-                log "info" "Detected Apple Silicon (arm64) platform"
-            else 
-                PLATFORM="osx-64"
-                log "info" "Detected Intel Mac platform"
-            fi
-            ;;
-        Linux*) 
-            PLATFORM="linux-64"
-            log "info" "Detected Linux platform"
-            ;;
-        *) 
-            log "warning" "Unsupported platform for conda-lock: $(uname -s)"
-            ;;
-    esac
-
-    if [ -n "$PLATFORM" ]; then
-        log "info" "Creating temporary environment file for conda-lock..."
-        TEMP_ENV_FILE_FOR_LOCK="${SCRIPT_DIR}/.temp_env_for_lock.yml"
-        
-        # Create a clean copy without editable installs
-        if ! cp "${ENV_FILE_TO_USE}" "${TEMP_ENV_FILE_FOR_LOCK}"; then
-            log "error" "Failed to create temporary environment file"
-            exit 1
-        fi
-        
-        # Remove editable installs which can cause issues with conda-lock
-        if ! sed -i.bak '/^[[:space:]]*-e[[:space:]]/d' "${TEMP_ENV_FILE_FOR_LOCK}" 2>/dev/null; then
-            # Try without .bak for macOS
-            if ! sed -i '' '/^[[:space:]]*-e[[:space:]]/d' "${TEMP_ENV_FILE_FOR_LOCK}" 2>/dev/null; then
-                log "warning" "Failed to clean editable installs from temp file"
-            fi
-        fi
-        
-        # Clean up backup file if it exists
-        rm -f "${TEMP_ENV_FILE_FOR_LOCK}.bak" 2>/dev/null || true
-
-        log "info" "Generating conda-lock.yml for platform: $PLATFORM"
-        LOCK_FILE_PATH="${SCRIPT_DIR}/conda-lock.yml"
-        
-        # Run conda-lock with verbose output
-        log "info" "Running: conda-lock lock -f ${TEMP_ENV_FILE_FOR_LOCK} -p ${PLATFORM} --lockfile ${LOCK_FILE_PATH}"
-        if conda-lock lock -f "${TEMP_ENV_FILE_FOR_LOCK}" -p "$PLATFORM" --lockfile "${LOCK_FILE_PATH}"; then
-            log "success" "Successfully generated ${LOCK_FILE_PATH} for ${PLATFORM}"
-        else
-            log "warning" "Failed to generate conda-lock.yml"
-        fi
-        
-        # Clean up temporary file
-        rm -f "${TEMP_ENV_FILE_FOR_LOCK}"
-    fi
-else
-    log "info" "Skipping conda-lock generation (not available)"
-fi
+generate_conda_lock "$ENV_FILE_TO_USE"
 
 section "Environment setup complete!"
 echo -e "\n${GREEN}✓ Environment '${ENV_PATH}' is ready to use!${NC}"
