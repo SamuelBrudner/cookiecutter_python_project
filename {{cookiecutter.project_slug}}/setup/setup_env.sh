@@ -40,10 +40,10 @@ AUTHOR_EMAIL="{{ cookiecutter.author_email }}"
 
 # --- Constants ---
 VERSION="0.1.0"
-ENV_NAME="${PROJECT_SLUG}-dev"
+ENV_NAME="${PROJECT_SLUG}-dev_env"
 ENV_NAME_PROD="${PROJECT_SLUG}"
-ENV_PATH_DEV="${PWD}/dev-env"
-ENV_PATH_PROD="${PWD}/prod-env"
+ENV_PATH_DEV="${PWD}/dev_env"
+ENV_PATH_PROD="${PWD}/prod_env"
 ENV_PATH="${ENV_PATH_DEV}"
 
 # --- Default values ---
@@ -164,7 +164,7 @@ source "$UTILS_SCRIPT"
 
 # Source function modules
 MODULES_DIR="${BASH_SOURCE[0]%/*}/modules"
-for module in setup_conda create_environment install_packages setup_pre_commit ensure_conda_lock generate_conda_lock; do
+for module in setup_conda setup_pre_commit ensure_conda_lock generate_conda_lock; do
     module_file="${MODULES_DIR}/${module}.sh"
     if [ -f "$module_file" ]; then
         # shellcheck source=/dev/null
@@ -260,20 +260,19 @@ if [ "$SKIP_CHECKS" = false ]; then
     }
 
     # Verify required commands are available
-    for cmd in conda python pip; do
-        check_command "$cmd"
-    done
+    check_command conda
 fi
 
 # --- Main Script Logic ---
 
 # Setup environment directory
-if [ -d "${ENV_PATH}" ] && [ "${FORCE}" = false ]; then
-    log "info" "Using existing environment at ${ENV_PATH}"
-else
-    if [ -d "${ENV_PATH}" ] && [ "${FORCE}" = true ]; then
-        log "warning" "Removing existing environment at ${ENV_PATH} (--force)"
+if [ -d "${ENV_PATH}" ]; then
+    if [ "${CLEAN_INSTALL}" = true ] || [ "${FORCE}" = true ]; then
+        log "warning" "Removing existing environment at ${ENV_PATH} (--clean-install)"
         rm -rf "${ENV_PATH}"
+        cleanup_nfs_temp_files "${ENV_PATH}" || true
+    else
+        log "info" "Using existing environment at ${ENV_PATH}"
     fi
 fi
 
@@ -287,8 +286,6 @@ section "Setting up ${PROJECT_NAME} environment in ${ENV_PATH}"
 
 # Run setup steps
 setup_conda
-create_environment
-install_packages
 setup_pre_commit
 generate_conda_lock
 
@@ -327,12 +324,12 @@ if [ "$PROD_MODE" = true ]; then
 elif [ "$DEV_MODE" = true ]; then
     ENV_FILE_TO_USE="${ENV_FILE_DEV}"
     ENV_PATH="${ENV_PATH_DEV}"
-    ENV_NAME="${PROJECT_SLUG}-dev"
+    ENV_NAME="${PROJECT_SLUG}-dev_env"
     echo -e "${YELLOW}Using development environment file: ${ENV_FILE_TO_USE##*/}${NC}"
 elif [ -f "${ENV_FILE_DEV}" ]; then
     ENV_FILE_TO_USE="${ENV_FILE_DEV}"
     ENV_PATH="${ENV_PATH_DEV}"
-    ENV_NAME="${PROJECT_SLUG}-dev"
+    ENV_NAME="${PROJECT_SLUG}-dev_env"
     echo -e "${YELLOW}Using development environment file: ${ENV_FILE_TO_USE##*/}${NC}"
 elif [ -f "${ENV_FILE_BASE}" ]; then
     ENV_FILE_TO_USE="${ENV_FILE_BASE}"
