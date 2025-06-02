@@ -69,12 +69,12 @@ cookiecutter gh:your-org/cookiecutter-python-project
 cd my_awesome_project
 ./setup/setup_env.sh --dev --clean-install
 ./setup/setup_env.sh --dev --use-lock    # use lock file if available
-conda activate ./dev-env
-alias activate_my_awesome_project-dev='conda activate my_awesome_project-dev'
+conda activate ./dev_env
+alias activate_my_awesome_project-dev_env='conda activate my_awesome_project-dev_env'
 
 # For a production environment
 ./setup/setup_env.sh --prod --clean-install
-conda activate ./prod-env
+conda activate ./prod_env
 
 # 4. Dive in!
 pytest      # runs the placeholder test

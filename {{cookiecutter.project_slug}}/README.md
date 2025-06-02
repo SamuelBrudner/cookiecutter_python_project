@@ -43,27 +43,16 @@ If you're unsure, it's safe to skip the API initially. You can always add it lat
 ### Prerequisites
 
 - Python {{ cookiecutter.python_version }} or higher
-- [Poetry](https://python-poetry.org/) (recommended) or pip
+- [Conda](https://docs.conda.io/en/latest/)
 
-### Using Poetry (recommended)
-
-```bash
-# Install dependencies
-poetry install
-
-# Activate the virtual environment
-poetry shell
-```
-
-### Using pip
+### Using the provided setup script
 
 ```bash
-# Create and activate a virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Create the development environment
+./setup/setup_env.sh --dev --clean-install
 
-# Install dependencies
-pip install -e .
+# Activate it
+conda activate ./dev_env
 ```
 
 ## 🚦 Usage
