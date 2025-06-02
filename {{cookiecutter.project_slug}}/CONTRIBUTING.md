@@ -10,6 +10,12 @@ Thank you for your interest in contributing to {{ cookiecutter.project_name }}! 
    ```bash
    make install
    ```
+   The development environment relies on Conda. Use the provided setup script to
+   create it:
+   ```bash
+   ./setup/setup_env.sh --dev --clean-install
+   ```
+   Pass `-v` or `--verbose` for detailed logging if you encounter issues.
 4. **Create a branch** for your changes:
    ```bash
    git checkout -b feature/your-feature-name
@@ -33,13 +39,30 @@ Thank you for your interest in contributing to {{ cookiecutter.project_name }}! 
    ```bash
    make lint
    ```
+5. **Sync notebooks and strip output** using pre-commit:
+   ```bash
+   pre-commit run --files notebooks/*.ipynb
+   ```
+   This keeps `.ipynb` files paired with `.py` scripts via Jupytext and removes
+   cell output using nbstripout.
 
-5. **Commit your changes** with a descriptive message:
+6. **Commit your changes** with a descriptive message:
    ```bash
    git commit -m "Add feature: your feature description"
    ```
 
-6. **Push** to your fork and open a pull request
+7. **Push** to your fork and open a pull request
+
+## Reviewing Notebook Changes
+
+Enable nbdime to get readable notebook diffs:
+
+```bash
+nbdime config-git --enable
+```
+
+When reviewing pull requests, Git will use nbdime to display a clear cell-by-cell
+diff for `.ipynb` files.
 
 ## Code Style
 

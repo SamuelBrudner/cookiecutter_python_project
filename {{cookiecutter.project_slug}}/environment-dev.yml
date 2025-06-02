@@ -2,3 +2,7 @@ name: {{ cookiecutter.project_slug }}-dev
 dependencies:
   - python={{ cookiecutter.python_version }}
   - pip
+  - pip:
+      - jupytext>=1.16.0
+      - nbstripout>=0.6.1
+      - nbdime>=4.0.1

@@ -74,6 +74,9 @@ dev = [
     "jupyterlab>=4.0.0",
     "jupyterlab-code-formatter>=2.0.0",
     "jupyter-packaging>=0.12.0",
+    "jupytext>=1.16.0",
+    "nbstripout>=0.6.1",
+    "nbdime>=4.0.1",
 ]
 
 [project.urls]
