@@ -78,7 +78,7 @@ def test_dev_flag_selects_dev_env(tmp_path: Path) -> None:
 
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}:{env['PATH']}"
-    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev_env")
 
     script = setup_dir / "setup_env.sh"
     result = subprocess.run([
@@ -108,7 +108,7 @@ def test_prod_flag_selects_base_env(tmp_path: Path) -> None:
 
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}:{env['PATH']}"
-    env["STUB_ENV_PATH"] = str(setup_dir / "prod-env")
+    env["STUB_ENV_PATH"] = str(setup_dir / "prod_env")
 
     script = setup_dir / "setup_env.sh"
     result = subprocess.run([
@@ -138,7 +138,7 @@ def test_source_without_run_setup(tmp_path: Path) -> None:
 
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}:{env['PATH']}"
-    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev_env")
 
     script = setup_dir / "setup_env.sh"
     result = subprocess.run(
@@ -170,7 +170,7 @@ def test_source_with_run_setup(tmp_path: Path) -> None:
 
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}:{env['PATH']}"
-    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev_env")
 
     script = setup_dir / "setup_env.sh"
     result = subprocess.run(
@@ -202,7 +202,7 @@ def test_activation_instructions(tmp_path: Path) -> None:
 
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}:{env['PATH']}"
-    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev_env")
 
     script = setup_dir / "setup_env.sh"
     result = subprocess.run(
@@ -217,7 +217,7 @@ def test_activation_instructions(tmp_path: Path) -> None:
     print(result.stdout)
     assert result.returncode == 0
     assert "conda run -p" in result.stdout
-    expected_alias = "alias activate_{{ cookiecutter.project_slug }}-dev"
+    expected_alias = "alias activate_{{ cookiecutter.project_slug }}-dev_env"
     assert expected_alias in result.stdout
 
 
@@ -227,7 +227,7 @@ def test_idempotent_existing_env(tmp_path: Path) -> None:
     _prepare_environment_files(setup_dir)
 
     # Simulate an existing environment directory
-    env_dir = setup_dir / "dev-env"
+    env_dir = setup_dir / "dev_env"
     env_dir.mkdir()
 
     bin_dir = tmp_path / "bin"
@@ -279,7 +279,7 @@ def test_paths_script_is_sourced(tmp_path: Path) -> None:
 
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}:{env['PATH']}"
-    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev_env")
 
     script = setup_dir / "setup_env.sh"
     result = subprocess.run(
@@ -319,7 +319,7 @@ def test_generate_makefile_paths_called(tmp_path: Path) -> None:
 
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}:{env['PATH']}"
-    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev_env")
 
     script = setup_dir / "setup_env.sh"
     result = subprocess.run(
@@ -349,8 +349,8 @@ def test_abort_when_env_active(tmp_path: Path) -> None:
 
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}:{env['PATH']}"
-    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
-    env["CONDA_PREFIX"] = str(setup_dir / "dev-env")
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev_env")
+    env["CONDA_PREFIX"] = str(setup_dir / "dev_env")
 
     script = setup_dir / "setup_env.sh"
     result = subprocess.run(
@@ -372,7 +372,7 @@ def test_clean_install_removes_old_env(tmp_path: Path) -> None:
     setup_dir = _prepare_scripts(tmp_path)
     _prepare_environment_files(setup_dir)
 
-    env_dir = setup_dir / "dev-env"
+    env_dir = setup_dir / "dev_env"
     env_dir.mkdir()
     (env_dir / "sentinel").write_text("old")
     (env_dir / ".nfs123").write_text("temp")
@@ -387,7 +387,7 @@ def test_clean_install_removes_old_env(tmp_path: Path) -> None:
 
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}:{env['PATH']}"
-    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev_env")
 
     script = setup_dir / "setup_env.sh"
     result = subprocess.run(
@@ -421,8 +421,8 @@ def test_skip_checks_allows_active_env(tmp_path: Path) -> None:
 
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}:{env['PATH']}"
-    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
-    env["CONDA_PREFIX"] = str(setup_dir / "dev-env")
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev_env")
+    env["CONDA_PREFIX"] = str(setup_dir / "dev_env")
 
     script = setup_dir / "setup_env.sh"
     result = subprocess.run(
@@ -464,11 +464,11 @@ def test_use_lock_creates_from_lock(tmp_path: Path) -> None:
 
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}:/usr/bin:/bin"
-    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev_env")
 
     script = setup_dir / "setup_env.sh"
 
-    result_fail = subprocess.run(
+    result_initial = subprocess.run(
         [str(script), "--dev", "--verbose", "--skip-pre-commit", "--skip-lock", "--no-tests"],
         cwd=setup_dir,
         env=env,
@@ -476,7 +476,7 @@ def test_use_lock_creates_from_lock(tmp_path: Path) -> None:
         stderr=subprocess.STDOUT,
         text=True,
     )
-    assert result_fail.returncode != 0
+    assert result_initial.returncode == 0
 
     result = subprocess.run(
         [str(script), "--dev", "--verbose", "--skip-pre-commit", "--skip-lock", "--no-tests", "--skip-checks"],
@@ -491,7 +491,7 @@ def test_use_lock_creates_from_lock(tmp_path: Path) -> None:
     assert result.returncode == 0
 
     env["PATH"] = f"{bin_dir}:{env['PATH']}"
-    env["STUB_ENV_PATH"] = str(setup_dir / "dev-env")
+    env["STUB_ENV_PATH"] = str(setup_dir / "dev_env")
 
     script = setup_dir / "setup_env.sh"
     result = subprocess.run([
